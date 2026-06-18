@@ -639,7 +639,7 @@ export function LiveDemoSlide() {
           </button>
 
           {/* Model info */}
-          <div className="ml-auto flex items-center gap-2 text-[10px] text-muted-foreground">
+          <div className="ml-auto mr-8 flex items-center gap-2 text-[10px] text-muted-foreground">
             <span className="font-mono text-hud-cyan">transfer_mobilenetv2.onnx</span>
             <span className="opacity-40">|</span>
             <span>Umbral <span className="font-mono font-bold text-hud-amber">{THRESHOLD}</span></span>
