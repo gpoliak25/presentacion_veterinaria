@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Detección de Patologías en Radiografías Veterinarias | CNN',
   description:
-    'Trabajo Práctico Integrador — Maestría en Ciencia de Datos. Detección de patologías en radiografías de tórax veterinarias mediante redes neuronales convolucionales.',
+    'Trabajo Práctico Integrador — Materia Aprendizaje Automatico, CAECE. Detección de patologías en radiografías de tórax veterinarias mediante redes neuronales convolucionales.',
   generator: 'v0.app',
   icons: {
     icon: [

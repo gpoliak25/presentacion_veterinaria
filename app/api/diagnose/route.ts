@@ -46,7 +46,7 @@ Próximos pasos clínicos sugeridos.
 No agregues un título general al principio: empezá directamente con "## Conclusión diagnóstica".
 
 ---
-*Análisis demostrativo — Trabajo Final de Maestría en Ciencia de Datos, CAECE 2026.*`
+*Análisis demostrativo — Trabajo Final de la materia Aprendizaje Automatico, CAECE 2026.*`
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

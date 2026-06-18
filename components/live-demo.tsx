@@ -295,7 +295,7 @@ function buildReportHtml(
     </div>
   </div>
   <main>${mdToHtml(md)}</main>
-  <div class="ftr">Generado por Claude (IA) · Análisis demostrativo — Trabajo Final, Maestría en Ciencia de Datos, CAECE 2026. No reemplaza el criterio de un profesional veterinario.</div>
+  <div class="ftr">Generado por Claude (IA) · Análisis demostrativo — Trabajo Final de la materia Aprendizaje Automatico, CAECE 2026. No reemplaza el criterio de un profesional veterinario.</div>
   <script>window.onload=function(){window.focus();window.print();};window.onafterprint=function(){window.close();};</script>
 </body></html>`
 }
