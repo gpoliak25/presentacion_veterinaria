@@ -49,9 +49,14 @@ export function Presentation() {
             <h1 className="truncate text-sm font-semibold md:text-base">{current.title}</h1>
           </div>
         </div>
-        <span className="shrink-0 rounded-full border border-border bg-card px-3 py-1 font-mono text-xs font-medium tabular-nums text-muted-foreground">
-          {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </span>
+        <div className="flex shrink-0 items-center gap-3">
+          <span className="text-xs font-medium text-muted-foreground">
+            {index + 1 <= 7 ? "Lic. Lorena López" : "Lic. Gisela Poliak"}
+          </span>
+          <span className="rounded-full border border-border bg-card px-3 py-1 font-mono text-xs font-medium tabular-nums text-muted-foreground">
+            {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          </span>
+        </div>
       </header>
 
       <main className="flex flex-1 items-center justify-center px-3 py-5 md:px-10 md:py-8">
