@@ -638,8 +638,11 @@ export function LiveDemoSlide() {
             <span className="font-bold">Subir imagen</span>
           </button>
 
-          {/* Model info */}
-          <div className="ml-auto mr-8 flex items-center gap-2 text-[10px] text-muted-foreground">
+          {/* spacer left */}
+          <div className="flex-1" />
+
+          {/* Model info — centered in the bar */}
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
             <span className="font-mono text-hud-cyan">transfer_mobilenetv2.onnx</span>
             <span className="opacity-40">|</span>
             <span>Umbral <span className="font-mono font-bold text-hud-amber">{THRESHOLD}</span></span>
@@ -648,6 +651,9 @@ export function LiveDemoSlide() {
               <div className="absolute top-0 h-full w-0.5 bg-white/80" style={{ left: `${THRESHOLD * 100}%` }} />
             </div>
           </div>
+
+          {/* spacer right — igual al left para centrar */}
+          <div className="flex-1" />
         </div>
 
         {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
