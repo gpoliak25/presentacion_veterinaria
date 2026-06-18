@@ -981,7 +981,14 @@ export function LiveDemoSlide() {
                 <p className="text-sm text-hud-red">{diagError}</p>
               </div>
             ) : (
-              <Markdown text={diagText} />
+              <>
+                <Markdown text={diagText} />
+                {diagText && (
+                  <p className="mt-4 text-[10px] italic text-muted-foreground/60">
+                    Análisis demostrativo — Trabajo Final de la materia Aprendizaje Automatico, CAECE 2026.
+                  </p>
+                )}
+              </>
             )}
           </div>
 

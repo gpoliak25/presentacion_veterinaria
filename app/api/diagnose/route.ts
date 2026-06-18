@@ -43,10 +43,7 @@ Listá los posibles diagnósticos ordenados por probabilidad.
 ## Recomendaciones
 Próximos pasos clínicos sugeridos.
 
-No agregues un título general al principio: empezá directamente con "## Conclusión diagnóstica".
-
----
-*Análisis demostrativo — Trabajo Final de la materia Aprendizaje Automatico, CAECE 2026.*`
+No agregues un título general al principio: empezá directamente con "## Conclusión diagnóstica".`
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
