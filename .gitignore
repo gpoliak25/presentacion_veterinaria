@@ -1,0 +1,23 @@
+# v0 sandbox internal files
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
+
+# Environment variables
+.env*.local
+
+# Common ignores
+node_modules
+.next/
+.DS_Store
+package-lock.json
+public/*.onnx
+# ...pero el modelo de la demo en vivo SÍ debe publicarse
+!public/transfer_mobilenetv2.onnx
+
+# logs locales del build
+install.log
+build.log
