@@ -102,7 +102,7 @@ function composeHeatmap(imgEl: HTMLImageElement, heat: Float32Array, grid: numbe
     px.data[i * 4]     = r
     px.data[i * 4 + 1] = g
     px.data[i * 4 + 2] = b
-    px.data[i * 4 + 3] = Math.round(Math.pow(v, 0.85) * 0.62 * 255)  // alpha ∝ relevancia
+    px.data[i * 4 + 3] = Math.round(Math.pow(v, 0.7) * 0.88 * 255)  // alpha ∝ relevancia
   }
   sctx.putImageData(px, 0, 0)
 
@@ -453,14 +453,6 @@ export function LiveDemoSlide() {
   const probPct   = prob !== null ? Math.round(prob * 100) : null
   const done      = prob !== null
 
-  // ── Image selection ──
-  function loadCase(i: number) {
-    const cs = CASES[i]
-    setMode("inference"); setImageSrc(cs.xray); setImageLabel(cs.label)
-    setOverlayUrl(cs.overlay); setActualLabel(cs.actual)
-    setShowGradcam(false); setProb(null); setInferError(null)
-  }
-
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return
     const name = file.name.length > 22 ? file.name.slice(0, 20) + "…" : file.name
@@ -731,7 +723,7 @@ export function LiveDemoSlide() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Mapa de activación · Grad-CAM
                 </p>
-                <div className="relative overflow-hidden rounded-md bg-black" style={{ height: 88 }}>
+                <div className="relative overflow-hidden rounded-md bg-black" style={{ height: 160 }}>
                   {gradcamLoading ? (
                     <div className="flex h-full flex-col items-center justify-center gap-1.5 px-3">
                       <Loader2 className="size-4 animate-spin text-hud-amber" />
