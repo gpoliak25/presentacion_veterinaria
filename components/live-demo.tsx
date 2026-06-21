@@ -88,64 +88,147 @@ function jet(v: number): [number, number, number] {
   return [r * 255, g * 255, b * 255]
 }
 
-// Parámetros de renderizado del Grad-CAM (solo afectan presentación).
-const GRADCAM_BG_THRESHOLD = 0.08   // luminancia normalizada bajo la cual el pixel es fondo
-const GRADCAM_PERCENTILE   = 70     // percentil de corte: bajo este umbral alpha=0
-const GRADCAM_ALPHA_MAX    = 0.45   // opacidad máxima del overlay sobre la radiografía
+// ── Parámetros de renderizado del Grad-CAM (solo presentación) ───────────────
+const GRADCAM_BG_THRESHOLD = 0.08   // luminancia normalizada: bajo este valor = fondo
+const GRADCAM_PERCENTILE   = 70     // percentil dentro del cuerpo: bajo este umbral alpha=0
+const GRADCAM_ALPHA_MAX    = 0.45   // opacidad máxima del overlay
 
-// Compone el heatmap (grilla GRID×GRID, valores 0..1) sobre la radiografía.
-// NO modifica los valores crudos de activación; solo controla presentación.
-function composeHeatmap(imgEl: HTMLImageElement, heat: Float32Array, grid: number): string {
-  // ── 1. Percentil de corte ──────────────────────────────────────────────
-  const sorted = Float32Array.from(heat).sort()
-  const pVal   = sorted[Math.floor(GRADCAM_PERCENTILE / 100 * (sorted.length - 1))]
-
-  // ── 2. Heatmap a baja resolución con alpha enmascarado por percentil ───
-  const small = document.createElement("canvas")
-  small.width = grid; small.height = grid
-  const sctx = small.getContext("2d")!
-  const px   = sctx.createImageData(grid, grid)
-  for (let i = 0; i < grid * grid; i++) {
-    const v = heat[i]
-    const [r, g, b] = jet(v)
-    px.data[i * 4]     = r
-    px.data[i * 4 + 1] = g
-    px.data[i * 4 + 2] = b
-    // Alpha=0 bajo el percentil; sube linealmente hasta ALPHA_MAX sobre él.
-    const tNorm = v <= pVal ? 0 : (1 - pVal > 0 ? (v - pVal) / (1 - pVal) : 1)
-    px.data[i * 4 + 3] = Math.round(tNorm * GRADCAM_ALPHA_MAX * 255)
-  }
-  sctx.putImageData(px, 0, 0)
-
-  // ── 3. Canvas de salida 512×512 ────────────────────────────────────────
-  const SZ = 512
-  const xCv = document.createElement("canvas")
-  xCv.width = SZ; xCv.height = SZ
-  const xCtx = xCv.getContext("2d", { willReadFrequently: true })!
-  xCtx.drawImage(imgEl, 0, 0, SZ, SZ)
-  const xPx = xCtx.getImageData(0, 0, SZ, SZ).data  // píxeles originales del X-ray
-
-  const out  = document.createElement("canvas")
-  out.width  = SZ; out.height = SZ
-  const octx = out.getContext("2d", { willReadFrequently: true })!
-  octx.drawImage(imgEl, 0, 0, SZ, SZ)
-  octx.imageSmoothingEnabled = true
-  octx.imageSmoothingQuality = "high"
-  octx.drawImage(small, 0, 0, SZ, SZ)   // upscale bilineal + blend alpha
-
-  // ── 4. Máscara de cuerpo: fondo negro → restaurar pixel original ───────
-  const lumThresh = GRADCAM_BG_THRESHOLD * 255
-  const comp = octx.getImageData(0, 0, SZ, SZ)
-  for (let i = 0; i < SZ * SZ; i++) {
-    const i4  = i * 4
-    const lum = xPx[i4] * 0.299 + xPx[i4 + 1] * 0.587 + xPx[i4 + 2] * 0.114
-    if (lum < lumThresh) {
-      comp.data[i4]     = xPx[i4]
-      comp.data[i4 + 1] = xPx[i4 + 1]
-      comp.data[i4 + 2] = xPx[i4 + 2]
+// ── Morfología binaria con elemento estructurante cuadrado ───────────────────
+function morphOp(src: Uint8Array, W: number, H: number, k: number, op: 'dilate' | 'erode'): Uint8Array {
+  const out = new Uint8Array(W * H)
+  const r   = Math.floor(k / 2)
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let on = op === 'erode'
+      outer: for (let dy = -r; dy <= r; dy++) {
+        const ny = y + dy
+        if (ny < 0 || ny >= H) { if (op === 'erode') { on = false; break outer } continue }
+        for (let dx = -r; dx <= r; dx++) {
+          const nx = x + dx
+          if (nx < 0 || nx >= W) { if (op === 'erode') { on = false; break outer } continue }
+          const bit = src[ny * W + nx] !== 0
+          if (op === 'dilate' && bit)  { on = true;  break outer }
+          if (op === 'erode'  && !bit) { on = false; break outer }
+        }
+      }
+      out[y * W + x] = on ? 1 : 0
     }
   }
-  octx.putImageData(comp, 0, 0)
+  return out
+}
+
+// ── Componente conexo más grande (BFS con cola pre-alocada O(N)) ─────────────
+function largestBlob(mask: Uint8Array, W: number, H: number): Uint8Array {
+  const labels = new Int32Array(W * H).fill(-1)
+  const queue  = new Int32Array(W * H)
+  let   nextLabel = 0
+  const sizes: number[] = []
+  for (let s = 0; s < W * H; s++) {
+    if (!mask[s] || labels[s] >= 0) continue
+    let head = 0, tail = 0, size = 0
+    queue[tail++] = s; labels[s] = nextLabel
+    while (head < tail) {
+      const p = queue[head++]; size++
+      const py = Math.floor(p / W), px = p % W
+      if (py > 0     && mask[p-W] && labels[p-W] < 0) { labels[p-W] = nextLabel; queue[tail++] = p-W }
+      if (py < H-1   && mask[p+W] && labels[p+W] < 0) { labels[p+W] = nextLabel; queue[tail++] = p+W }
+      if (px > 0     && mask[p-1] && labels[p-1] < 0) { labels[p-1] = nextLabel; queue[tail++] = p-1 }
+      if (px < W-1   && mask[p+1] && labels[p+1] < 0) { labels[p+1] = nextLabel; queue[tail++] = p+1 }
+    }
+    sizes.push(size); nextLabel++
+  }
+  const best = sizes.length ? sizes.indexOf(Math.max(...sizes)) : -1
+  const out  = new Uint8Array(W * H)
+  if (best >= 0) for (let i = 0; i < W * H; i++) if (labels[i] === best) out[i] = 1
+  return out
+}
+
+// ── Composición del Grad-CAM — NO modifica valores crudos de activación ───────
+function composeHeatmap(imgEl: HTMLImageElement, heat: Float32Array, grid: number): string {
+  const SZ     = 512
+  const KERNEL = 5
+
+  // Paso 0 — X-ray original a 512×512
+  const xCv  = document.createElement("canvas"); xCv.width = xCv.height = SZ
+  const xCtx = xCv.getContext("2d", { willReadFrequently: true })!
+  xCtx.drawImage(imgEl, 0, 0, SZ, SZ)
+  const xPx = xCtx.getImageData(0, 0, SZ, SZ).data
+
+  // Paso 1 — Máscara del cuerpo calculada sobre 'gray' ORIGINAL
+  const lumThresh = GRADCAM_BG_THRESHOLD * 255
+  const gray      = new Float32Array(SZ * SZ)
+  let   bodyMask  = new Uint8Array(SZ * SZ)
+  for (let i = 0; i < SZ * SZ; i++) {
+    const i4 = i * 4
+    const lum = xPx[i4] * 0.299 + xPx[i4+1] * 0.587 + xPx[i4+2] * 0.114
+    gray[i]     = lum / 255
+    bodyMask[i] = lum >= lumThresh ? 1 : 0
+  }
+  // Closing (dilate→erode): rellena huecos pequeños
+  bodyMask = morphOp(bodyMask, SZ, SZ, KERNEL, 'dilate')
+  bodyMask = morphOp(bodyMask, SZ, SZ, KERNEL, 'erode')
+  // Opening (erode→dilate): elimina blobs aislados del fondo
+  bodyMask = morphOp(bodyMask, SZ, SZ, KERNEL, 'erode')
+  bodyMask = morphOp(bodyMask, SZ, SZ, KERNEL, 'dilate')
+  // Solo el componente conexo más grande (el animal)
+  bodyMask = largestBlob(bodyMask, SZ, SZ)
+
+  // Paso 2 — Normalizar activación a [0,1]
+  let minH = Infinity, maxH = -Infinity
+  for (let i = 0; i < heat.length; i++) {
+    if (heat[i] < minH) minH = heat[i]
+    if (heat[i] > maxH) maxH = heat[i]
+  }
+  const hRange  = maxH - minH + 1e-8
+  const camNorm = new Float32Array(heat.length)
+  for (let i = 0; i < heat.length; i++) camNorm[i] = (heat[i] - minH) / hRange
+
+  // Paso 3 — Upsample camNorm a 512×512 por bilineal (via drawImage)
+  const sCv  = document.createElement("canvas"); sCv.width = sCv.height = grid
+  const sCtx = sCv.getContext("2d")!
+  const spx  = sCtx.createImageData(grid, grid)
+  for (let i = 0; i < grid * grid; i++) {
+    spx.data[i*4] = Math.round(camNorm[i] * 255); spx.data[i*4+3] = 255
+  }
+  sCtx.putImageData(spx, 0, 0)
+  const uCv  = document.createElement("canvas"); uCv.width = uCv.height = SZ
+  const uCtx = uCv.getContext("2d", { willReadFrequently: true })!
+  uCtx.imageSmoothingEnabled = true; uCtx.imageSmoothingQuality = "high"
+  uCtx.drawImage(sCv, 0, 0, SZ, SZ)
+  const uPx    = uCtx.getImageData(0, 0, SZ, SZ).data
+  const camFull = new Float32Array(SZ * SZ)
+  for (let i = 0; i < SZ * SZ; i++) camFull[i] = uPx[i*4] / 255
+
+  // Paso 4 — Percentil calculado SOLO sobre píxeles dentro del body_mask
+  const inside: number[] = []
+  for (let i = 0; i < SZ * SZ; i++) if (bodyMask[i]) inside.push(camFull[i])
+  inside.sort((a, b) => a - b)
+  const cutoff = inside.length > 0
+    ? inside[Math.floor(GRADCAM_PERCENTILE / 100 * (inside.length - 1))]
+    : 0
+
+  // cam_thresh: fuera del cuerpo o bajo el percentil → 0
+  const camThresh = new Float32Array(SZ * SZ)
+  for (let i = 0; i < SZ * SZ; i++)
+    camThresh[i] = (bodyMask[i] && camFull[i] > cutoff) ? camFull[i] : 0
+
+  // Paso 5 — Composición pixel a pixel
+  const out    = document.createElement("canvas"); out.width = out.height = SZ
+  const octx   = out.getContext("2d")!
+  const outImg = octx.createImageData(SZ, SZ)
+  for (let i = 0; i < SZ * SZ; i++) {
+    const i4 = i * 4
+    let R = xPx[i4], G = xPx[i4+1], B = xPx[i4+2]  // base: X-ray original (incluye anotaciones)
+    if (camThresh[i] > 0) {
+      const alpha   = camThresh[i] * GRADCAM_ALPHA_MAX
+      const [hr, hg, hb] = jet(camFull[i])
+      R = Math.round(R * (1 - alpha) + hr * alpha)
+      G = Math.round(G * (1 - alpha) + hg * alpha)
+      B = Math.round(B * (1 - alpha) + hb * alpha)
+    }
+    outImg.data[i4] = R; outImg.data[i4+1] = G; outImg.data[i4+2] = B; outImg.data[i4+3] = 255
+  }
+  octx.putImageData(outImg, 0, 0)
   return out.toDataURL("image/png")
 }
 
