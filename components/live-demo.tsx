@@ -106,20 +106,16 @@ function composeHeatmap(imgEl: HTMLImageElement, heat: Float32Array, grid: numbe
   }
   sctx.putImageData(px, 0, 0)
 
-  // Lienzo final con la proporción original de la imagen (cap a 512px).
-  const NW = imgEl.naturalWidth || IMG_SIZE
-  const NH = imgEl.naturalHeight || IMG_SIZE
-  const scale = Math.min(1, 512 / Math.max(NW, NH))
-  const W = Math.max(1, Math.round(NW * scale))
-  const H = Math.max(1, Math.round(NH * scale))
-
-  const out  = document.createElement("canvas")
-  out.width = W; out.height = H
+  // Canvas cuadrado 512×512 (igual que la vista del modelo) para que el
+  // heatmap llene el panel sin bordes negros del visor DICOM.
+  const SZ = 512
+  const out = document.createElement("canvas")
+  out.width = SZ; out.height = SZ
   const octx = out.getContext("2d")!
-  octx.drawImage(imgEl, 0, 0, W, H)
+  octx.drawImage(imgEl, 0, 0, SZ, SZ)
   octx.imageSmoothingEnabled = true
   octx.imageSmoothingQuality = "high"
-  octx.drawImage(small, 0, 0, W, H)  // upscale bilineal del heatmap
+  octx.drawImage(small, 0, 0, SZ, SZ)  // upscale bilineal del heatmap
   return out.toDataURL("image/png")
 }
 
@@ -736,7 +732,7 @@ export function LiveDemoSlide() {
                   ) : overlayUrl && done ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={overlayUrl} alt="Grad-CAM" onClick={() => openZoom(overlayUrl)}
-                      className="absolute inset-0 h-full w-full cursor-zoom-in object-contain transition-transform hover:scale-[1.03]" />
+                      className="absolute inset-0 h-full w-full cursor-zoom-in object-cover transition-transform hover:scale-[1.03]" />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <p className="whitespace-pre text-center text-[10px] leading-relaxed text-muted-foreground">
