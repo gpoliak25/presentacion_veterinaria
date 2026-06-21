@@ -88,10 +88,19 @@ function jet(v: number): [number, number, number] {
   return [r * 255, g * 255, b * 255]
 }
 
-// Compone el heatmap (grilla GRID×GRID, valores 0..1) sobre la radiografía y
-// devuelve un data-URL listo para usar como overlay.
+// Parámetros de renderizado del Grad-CAM (solo afectan presentación).
+const GRADCAM_BG_THRESHOLD = 0.08   // luminancia normalizada bajo la cual el pixel es fondo
+const GRADCAM_PERCENTILE   = 70     // percentil de corte: bajo este umbral alpha=0
+const GRADCAM_ALPHA_MAX    = 0.45   // opacidad máxima del overlay sobre la radiografía
+
+// Compone el heatmap (grilla GRID×GRID, valores 0..1) sobre la radiografía.
+// NO modifica los valores crudos de activación; solo controla presentación.
 function composeHeatmap(imgEl: HTMLImageElement, heat: Float32Array, grid: number): string {
-  // Heatmap a baja resolución; el reescalado bilineal lo suaviza al ampliarlo.
+  // ── 1. Percentil de corte ──────────────────────────────────────────────
+  const sorted = Float32Array.from(heat).sort()
+  const pVal   = sorted[Math.floor(GRADCAM_PERCENTILE / 100 * (sorted.length - 1))]
+
+  // ── 2. Heatmap a baja resolución con alpha enmascarado por percentil ───
   const small = document.createElement("canvas")
   small.width = grid; small.height = grid
   const sctx = small.getContext("2d")!
@@ -102,20 +111,41 @@ function composeHeatmap(imgEl: HTMLImageElement, heat: Float32Array, grid: numbe
     px.data[i * 4]     = r
     px.data[i * 4 + 1] = g
     px.data[i * 4 + 2] = b
-    px.data[i * 4 + 3] = Math.round(Math.pow(v, 0.7) * 0.88 * 255)  // alpha ∝ relevancia
+    // Alpha=0 bajo el percentil; sube linealmente hasta ALPHA_MAX sobre él.
+    const tNorm = v <= pVal ? 0 : (1 - pVal > 0 ? (v - pVal) / (1 - pVal) : 1)
+    px.data[i * 4 + 3] = Math.round(tNorm * GRADCAM_ALPHA_MAX * 255)
   }
   sctx.putImageData(px, 0, 0)
 
-  // Canvas cuadrado 512×512 (igual que la vista del modelo) para que el
-  // heatmap llene el panel sin bordes negros del visor DICOM.
+  // ── 3. Canvas de salida 512×512 ────────────────────────────────────────
   const SZ = 512
-  const out = document.createElement("canvas")
-  out.width = SZ; out.height = SZ
-  const octx = out.getContext("2d")!
+  const xCv = document.createElement("canvas")
+  xCv.width = SZ; xCv.height = SZ
+  const xCtx = xCv.getContext("2d", { willReadFrequently: true })!
+  xCtx.drawImage(imgEl, 0, 0, SZ, SZ)
+  const xPx = xCtx.getImageData(0, 0, SZ, SZ).data  // píxeles originales del X-ray
+
+  const out  = document.createElement("canvas")
+  out.width  = SZ; out.height = SZ
+  const octx = out.getContext("2d", { willReadFrequently: true })!
   octx.drawImage(imgEl, 0, 0, SZ, SZ)
   octx.imageSmoothingEnabled = true
   octx.imageSmoothingQuality = "high"
-  octx.drawImage(small, 0, 0, SZ, SZ)  // upscale bilineal del heatmap
+  octx.drawImage(small, 0, 0, SZ, SZ)   // upscale bilineal + blend alpha
+
+  // ── 4. Máscara de cuerpo: fondo negro → restaurar pixel original ───────
+  const lumThresh = GRADCAM_BG_THRESHOLD * 255
+  const comp = octx.getImageData(0, 0, SZ, SZ)
+  for (let i = 0; i < SZ * SZ; i++) {
+    const i4  = i * 4
+    const lum = xPx[i4] * 0.299 + xPx[i4 + 1] * 0.587 + xPx[i4 + 2] * 0.114
+    if (lum < lumThresh) {
+      comp.data[i4]     = xPx[i4]
+      comp.data[i4 + 1] = xPx[i4 + 1]
+      comp.data[i4 + 2] = xPx[i4 + 2]
+    }
+  }
+  octx.putImageData(comp, 0, 0)
   return out.toDataURL("image/png")
 }
 
