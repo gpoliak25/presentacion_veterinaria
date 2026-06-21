@@ -295,7 +295,7 @@ function buildReportHtml(
     </div>
   </div>
   <main>${mdToHtml(md)}</main>
-  <div class="ftr">Generado por Claude (IA) · Análisis demostrativo — Trabajo Final de la materia Aprendizaje Automatico, CAECE 2026. No reemplaza el criterio de un profesional veterinario.</div>
+  <div class="ftr">Generado por Claude (IA) · Análisis demostrativo — Trabajo Final, Maestría en Ciencia de Datos, CAECE 2026. No reemplaza el criterio de un profesional veterinario.</div>
   <script>window.onload=function(){window.focus();window.print();};window.onafterprint=function(){window.close();};</script>
 </body></html>`
 }
@@ -638,11 +638,8 @@ export function LiveDemoSlide() {
             <span className="font-bold">Subir imagen</span>
           </button>
 
-          {/* spacer left */}
-          <div className="flex-1" />
-
-          {/* Model info — centered in the bar */}
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          {/* Model info */}
+          <div className="ml-auto flex items-center gap-2 text-[10px] text-muted-foreground">
             <span className="font-mono text-hud-cyan">transfer_mobilenetv2.onnx</span>
             <span className="opacity-40">|</span>
             <span>Umbral <span className="font-mono font-bold text-hud-amber">{THRESHOLD}</span></span>
@@ -651,9 +648,6 @@ export function LiveDemoSlide() {
               <div className="absolute top-0 h-full w-0.5 bg-white/80" style={{ left: `${THRESHOLD * 100}%` }} />
             </div>
           </div>
-
-          {/* spacer right — igual al left para centrar */}
-          <div className="flex-1" />
         </div>
 
         {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
@@ -727,21 +721,6 @@ export function LiveDemoSlide() {
                 {inferError && <p className="text-xs text-hud-red">{inferError}</p>}
               </div>
 
-              {/* Demo cases — acceso rápido a casos con Grad-CAM */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground">Demo:</span>
-                {CASES.map((cs, i) => (
-                  <button key={cs.label} onClick={() => loadCase(i)}
-                    className={[
-                      "rounded-md border px-2.5 py-1 text-[10px] font-semibold transition-colors",
-                      imageLabel === cs.label
-                        ? "border-hud-cyan/60 bg-hud-cyan/10 text-hud-cyan"
-                        : "border-border text-muted-foreground hover:border-hud-cyan/40 hover:text-hud-cyan",
-                    ].join(" ")}>
-                    {cs.label} · {cs.tag}
-                  </button>
-                ))}
-              </div>
             </Panel>
 
             {/* Right: Grad-CAM + Probability + Verdict */}
@@ -987,14 +966,7 @@ export function LiveDemoSlide() {
                 <p className="text-sm text-hud-red">{diagError}</p>
               </div>
             ) : (
-              <>
-                <Markdown text={diagText} />
-                {diagText && (
-                  <p className="mt-4 text-[10px] italic text-muted-foreground/60">
-                    Análisis demostrativo — Trabajo Final de la materia Aprendizaje Automatico, CAECE 2026.
-                  </p>
-                )}
-              </>
+              <Markdown text={diagText} />
             )}
           </div>
 
