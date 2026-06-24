@@ -687,7 +687,7 @@ function TruePositive() {
                 </p>
               </div>
             </div>
-            <Stat label="Probabilidad" value="0,61" accent="green" />
+            <Stat label="Probabilidad" value="0,82" accent="green" />
           </div>
         </Panel>
       </div>
