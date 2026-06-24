@@ -776,8 +776,7 @@ function Conclusions() {
               <h3 className="text-lg font-bold text-hud-cyan md:text-xl">Logro principal</h3>
               <p className="mt-1 text-pretty text-sm leading-relaxed text-muted-foreground md:text-base">
                 Transfer Learning (MobileNetV2) calibrado con un umbral de <span className="text-hud-cyan">0,30</span>{" "}
-                produce un <span className="font-semibold text-foreground">filtro de triage interpretable</span>: sensible
-                al paciente y auditable mediante Grad-CAM.
+                produce un <span className="font-semibold text-foreground">filtro de triage interpretable</span>: prioriza no dejar pasar patologías mediante Grad-CAM.
               </p>
             </div>
           </div>
