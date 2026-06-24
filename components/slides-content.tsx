@@ -708,7 +708,7 @@ function ErrorAnatomy() {
               <AlertTriangle className="size-5" />
               <h3 className="text-base font-bold">Falso negativo · error crítico</h3>
             </div>
-            <span className="font-mono text-sm text-hud-red">p = 0,36</span>
+            <span className="font-mono text-sm text-hud-red">p = 0,24</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
@@ -730,7 +730,7 @@ function ErrorAnatomy() {
               <Eye className="size-5" />
               <h3 className="text-base font-bold">Falso positivo · falsa alarma</h3>
             </div>
-            <span className="font-mono text-sm text-hud-amber">p = 0,54</span>
+            <span className="font-mono text-sm text-hud-amber">p = 0,62</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
