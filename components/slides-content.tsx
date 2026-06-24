@@ -444,11 +444,11 @@ function ResultsApproach2() {
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-hud-green">
               Matriz de confusión · Transfer
             </h3>
-            <ConfusionMatrix matrix={[[31, 6], [7, 23]]} />
+            <ConfusionMatrix matrix={[[32, 5], [15, 15]]} />
           </Panel>
           <Panel accent="green">
             <div className="flex items-center justify-between">
-              <Stat label="AUC" value="0,852" accent="green" trend="up" />
+              <Stat label="AUC" value="0,747" accent="green" trend="up" />
               <span className="rounded-md border border-hud-green/40 bg-hud-green/10 px-2.5 py-1 text-xs font-semibold text-hud-green">
                 Aprendizaje real
               </span>
