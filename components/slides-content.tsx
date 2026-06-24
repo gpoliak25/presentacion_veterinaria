@@ -783,7 +783,7 @@ function Conclusions() {
         </Panel>
 
         <div>
-          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Líneas de evolución</p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recomendaciones a futuro</p>
           <div className="grid grid-cols-3 gap-4">
             {future.map((f) => (
               <Panel key={f.title} className="flex flex-col">
