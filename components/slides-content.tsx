@@ -568,15 +568,15 @@ function Threshold() {
             <Panel accent="cyan">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-hud-cyan">Umbral 0,50</p>
               <div className="flex flex-col gap-3">
-                <Stat label="Recall" value="0,767" accent="cyan" />
-                <Stat label="Precision" value="0,793" accent="cyan" />
+                <Stat label="Recall" value="0,500" accent="cyan" />
+                <Stat label="Precision" value="0,750" accent="cyan" />
               </div>
             </Panel>
             <Panel accent="amber" glow>
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-hud-amber">Umbral 0,30</p>
               <div className="flex flex-col gap-3">
-                <Stat label="Recall" value="0,867" accent="amber" trend="up" />
-                <Stat label="Precision" value="0,650" accent="amber" trend="down" />
+                <Stat label="Recall" value="0,800" accent="amber" trend="up" />
+                <Stat label="Precision" value="0,600" accent="amber" trend="down" />
               </div>
             </Panel>
           </div>
