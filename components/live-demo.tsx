@@ -1075,7 +1075,7 @@ export function LiveDemoSlide() {
           {!diagLoading && !diagError && diagText && (
             <div className="flex shrink-0 items-center justify-between border-t border-border px-6 py-3">
               <p className="text-[10px] text-muted-foreground">
-                Generado por Claude · uso académico exclusivo
+                Generado por Claude · Aprendizaje Automático, Maestría en Ciencia de Datos, Universidad CAECE
               </p>
               <div className="flex items-center gap-2">
                 <button

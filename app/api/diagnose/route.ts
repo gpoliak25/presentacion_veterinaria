@@ -43,7 +43,11 @@ Listá los posibles diagnósticos ordenados por probabilidad.
 ## Recomendaciones
 Próximos pasos clínicos sugeridos.
 
-No agregues un título general al principio: empezá directamente con "## Conclusión diagnóstica".`
+No agregues un título general al principio: empezá directamente con "## Conclusión diagnóstica".
+
+Al final del informe, después de todas las secciones, agregá exactamente esta nota en cursiva:
+
+*Resultado con fines exclusivamente académicos, generado para ejemplificar los conceptos de la materia Aprendizaje Automático (Maestría en Ciencia de Datos, Universidad CAECE). No constituye un diagnóstico ni reemplaza la evaluación de un veterinario radiólogo.*`
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
