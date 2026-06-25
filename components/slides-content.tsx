@@ -491,7 +491,7 @@ function Synthesis() {
             <thead>
               <tr className="border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="pb-2 font-medium">Métrica</th>
-                <th className="pb-2 text-right font-medium">CNN scratch</th>
+                <th className="pb-2 text-right font-medium">CNN</th>
                 <th className="pb-2 text-right font-medium text-hud-cyan">Transfer Learning</th>
               </tr>
             </thead>
